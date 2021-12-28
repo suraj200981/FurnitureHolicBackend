@@ -10,7 +10,6 @@ namespace FurnitureHolicBackend.Entities
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Name must be added")]
         public string Name { get; set; }
 
         [Required(ErrorMessage = "Email must be added")]

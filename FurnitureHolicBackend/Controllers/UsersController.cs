@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace FurnitureHolicBackend.Controllers
@@ -51,6 +53,41 @@ namespace FurnitureHolicBackend.Controllers
 
             return StatusCode(StatusCodes.Status201Created);
         
+        }
+
+        [HttpPost]
+        public IActionResult Login([FromBody] User user) {
+
+            var emailCheck = _dbContext.Users.FirstOrDefault(u => u.Email == user.Email);
+
+            if (emailCheck == null) {
+                return NotFound("User email does not exist");
+            }
+
+            if (!SecurePasswordHasherHelper.Verify(user.Password, emailCheck.Password)) {
+                return Unauthorized("Password is incorrect");
+            }
+
+            var claims = new[]
+                {
+                   new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                   new Claim(ClaimTypes.Email, user.Email),
+                   new Claim(ClaimTypes.Role, emailCheck.UserType)
+                };
+
+            var token = _auth.GenerateAccessToken(claims);
+
+            //return JWT Token
+            return new ObjectResult(new
+            {
+                access_token = token.AccessToken,
+                expires_in = token.ExpiresIn,
+                token_type = token.TokenType,
+                creation_Time = token.ValidFrom,
+                expiration_Time = token.ValidTo,
+                user_id = emailCheck.Id
+            });
+
         }
 
     }
