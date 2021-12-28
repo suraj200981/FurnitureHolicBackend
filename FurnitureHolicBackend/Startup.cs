@@ -45,6 +45,8 @@ namespace FurnitureHolicBackend
                       ClockSkew = TimeSpan.Zero,
                   };
               });
+            services.AddCors(options => options.AddDefaultPolicy(builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,6 +70,9 @@ namespace FurnitureHolicBackend
 
             app.UseRouting();
 
+            app.UseCors();
+
+
             //authentication always comes before authorization
             app.UseAuthentication();
 
@@ -75,7 +80,7 @@ namespace FurnitureHolicBackend
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }
