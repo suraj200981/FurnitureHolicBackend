@@ -1,12 +1,14 @@
 ﻿using AuthenticationPlugin;
 using FurnitureHolicBackend.Data;
 using FurnitureHolicBackend.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -29,7 +31,7 @@ namespace FurnitureHolicBackend.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register([FromBody] User user) {
+        public IActionResult Register([FromForm] User user) {
 
 
             var userWithSameEmail = _dbContext.Users.Where(u => u.Email == user.Email).FirstOrDefault();
@@ -39,14 +41,23 @@ namespace FurnitureHolicBackend.Controllers
                 return BadRequest("User with same email address already exists");
             }
 
+            var uniqueNameForImage = Guid.NewGuid();
+            var filePath = Path.Combine("wwwroot", uniqueNameForImage + ".jpg");
+
+            if (user.Image != null) {
+                var fileStream = new FileStream(filePath, FileMode.Create);
+                user.Image.CopyTo(fileStream);
+            }
+
             var regularUserReg = new User
             {
                 Name = user.Name,
                 Email = user.Email,
                 Phone = user.Phone,
                 Password = SecurePasswordHasherHelper.Hash(user.Password),
-                UserType = "Regular"
-            };
+                UserType = "Regular",
+                ImageUrl = user.ImageUrl = filePath.Remove(0, 7)
+        };
 
             _dbContext.Users.Add(regularUserReg);
             _dbContext.SaveChanges();
@@ -88,6 +99,13 @@ namespace FurnitureHolicBackend.Controllers
                 user_id = emailCheck.Id
             });
 
+        }
+        [Authorize]
+        [HttpGet]
+        public IActionResult AuthenticateUser() {
+
+            return Ok("Tokken Authenticated");
+        
         }
 
     }
