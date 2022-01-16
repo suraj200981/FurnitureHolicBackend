@@ -108,5 +108,29 @@ namespace FurnitureHolicBackend.Controllers
         
         }
 
+        [Authorize]
+        [HttpGet]
+        //api/movies/GetUserInformation?email=Suraj@hotmail.com  this would be the url for this method
+        public IActionResult GetUserInformation(string email)
+        {
+
+            var userFound = from user in _dbContext.Users
+                             where user.Email.StartsWith(email)
+                             select new
+                             {
+                                 Name = user.Name,
+                                 Phone = user.Phone,
+                                 ImageUrl = user.ImageUrl
+                             };
+
+            if (userFound.All(a => string.IsNullOrEmpty(a.Name)))
+            {
+                return NotFound("User not found");
+            }
+
+            return Ok(userFound);
+        }
+
+
     }
 }
