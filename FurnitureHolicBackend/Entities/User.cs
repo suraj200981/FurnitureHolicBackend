@@ -14,9 +14,7 @@ namespace FurnitureHolicBackend.Entities
 
         public string Name { get; set; }
 
-        [Required(ErrorMessage = "Email must be added")]
         public string Email { get; set; }
-        [Required(ErrorMessage = "Password must be added")]
         public string Password { get; set; }
 
         public string Phone { get; set; }

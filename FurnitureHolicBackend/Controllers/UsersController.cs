@@ -33,7 +33,7 @@ namespace FurnitureHolicBackend.Controllers
         [HttpPost]
         public IActionResult Register([FromForm] User user) {
 
-
+            
             var userWithSameEmail = _dbContext.Users.Where(u => u.Email == user.Email).FirstOrDefault();
 
             if (userWithSameEmail != null)
@@ -118,6 +118,7 @@ namespace FurnitureHolicBackend.Controllers
                              where user.Email.StartsWith(email)
                              select new
                              {
+                                 Id = user.Id,
                                  Name = user.Name,
                                  Phone = user.Phone,
                                  ImageUrl = user.ImageUrl
@@ -129,6 +130,40 @@ namespace FurnitureHolicBackend.Controllers
             }
 
             return Ok(userFound);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public IActionResult UpdateUserInformation(int id, [FromForm] User newDetails) {
+
+
+            var currentUserDetails = _dbContext.Users.Find(id);
+
+            if (currentUserDetails == null)
+            {
+                return NotFound();
+            }
+            else {
+                var uniqueNameForImage = Guid.NewGuid();
+                var filePath = Path.Combine("wwwroot", uniqueNameForImage + ".jpg");
+
+                if (newDetails.Image != null) {
+
+                    var fileStream = new FileStream(filePath, FileMode.Create);
+                    newDetails.Image.CopyTo(fileStream);
+                    currentUserDetails.ImageUrl = filePath.Remove(0, 7);
+                }
+
+                currentUserDetails.Name = newDetails.Name;
+                currentUserDetails.Email = newDetails.Email;
+                currentUserDetails.Phone = newDetails.Phone;
+                currentUserDetails.Image = newDetails.Image;
+                currentUserDetails.ImageUrl = newDetails.ImageUrl;
+
+            }
+
+
+            return null;
         }
 
 
