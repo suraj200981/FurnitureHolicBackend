@@ -31,9 +31,10 @@ namespace FurnitureHolicBackend.Controllers
         }
 
         [HttpPost]
-        public IActionResult Register([FromForm] User user) {
+        public IActionResult Register([FromForm] User user)
+        {
 
-            
+
             var userWithSameEmail = _dbContext.Users.Where(u => u.Email == user.Email).FirstOrDefault();
 
             if (userWithSameEmail != null)
@@ -44,7 +45,8 @@ namespace FurnitureHolicBackend.Controllers
             var uniqueNameForImage = Guid.NewGuid();
             var filePath = Path.Combine("wwwroot", uniqueNameForImage + ".jpg");
 
-            if (user.Image != null) {
+            if (user.Image != null)
+            {
                 var fileStream = new FileStream(filePath, FileMode.Create);
                 user.Image.CopyTo(fileStream);
             }
@@ -57,25 +59,28 @@ namespace FurnitureHolicBackend.Controllers
                 Password = SecurePasswordHasherHelper.Hash(user.Password),
                 UserType = "Regular",
                 ImageUrl = user.ImageUrl = filePath.Remove(0, 7)
-        };
+            };
 
             _dbContext.Users.Add(regularUserReg);
             _dbContext.SaveChanges();
 
             return StatusCode(StatusCodes.Status201Created);
-        
+
         }
 
         [HttpPost]
-        public IActionResult Login([FromBody] User user) {
+        public IActionResult Login([FromBody] User user)
+        {
 
             var emailCheck = _dbContext.Users.FirstOrDefault(u => u.Email == user.Email);
 
-            if (emailCheck == null) {
+            if (emailCheck == null)
+            {
                 return NotFound("User email does not exist");
             }
 
-            if (!SecurePasswordHasherHelper.Verify(user.Password, emailCheck.Password)) {
+            if (!SecurePasswordHasherHelper.Verify(user.Password, emailCheck.Password))
+            {
                 return Unauthorized("Password is incorrect");
             }
 
@@ -102,10 +107,11 @@ namespace FurnitureHolicBackend.Controllers
         }
         [Authorize]
         [HttpGet]
-        public IActionResult AuthenticateUser() {
+        public IActionResult AuthenticateUser()
+        {
 
             return Ok("Tokken Authenticated");
-        
+
         }
 
         [Authorize]
@@ -115,14 +121,14 @@ namespace FurnitureHolicBackend.Controllers
         {
 
             var userFound = from user in _dbContext.Users
-                             where user.Email.StartsWith(email)
-                             select new
-                             {
-                                 Id = user.Id,
-                                 Name = user.Name,
-                                 Phone = user.Phone,
-                                 ImageUrl = user.ImageUrl
-                             };
+                            where user.Email.StartsWith(email)
+                            select new
+                            {
+                                Id = user.Id,
+                                Name = user.Name,
+                                Phone = user.Phone,
+                                ImageUrl = user.ImageUrl
+                            };
 
             if (userFound.All(a => string.IsNullOrEmpty(a.Name)))
             {
@@ -134,7 +140,8 @@ namespace FurnitureHolicBackend.Controllers
 
         [Authorize]
         [HttpPut("{id}")]
-        public IActionResult UpdateUserInformation(int id, [FromForm] User newDetails) {
+        public IActionResult UpdateUserInformation(int id, [FromForm] User newDetails)
+        {
 
 
             var currentUserDetails = _dbContext.Users.Find(id);
@@ -143,29 +150,62 @@ namespace FurnitureHolicBackend.Controllers
             {
                 return NotFound();
             }
-            else {
+            else
+            {
                 var uniqueNameForImage = Guid.NewGuid();
                 var filePath = Path.Combine("wwwroot", uniqueNameForImage + ".jpg");
 
-                if (newDetails.Image != null) {
+                if (newDetails.Image != null)
+                {
+
+                    var fileStream = new FileStream(filePath, FileMode.Create);
+                    newDetails.Image.CopyTo(fileStream);
+                    currentUserDetails.ImageUrl = filePath.Remove(1, 7);
+                }
+
+                currentUserDetails.Name = newDetails.Name;
+                currentUserDetails.Email = newDetails.Email;
+                currentUserDetails.Phone = newDetails.Phone;
+
+                _dbContext.SaveChanges();
+
+                return Ok("Record successfully updated");
+            }
+
+            return null;
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public IActionResult ChangeDisplayPicture(int id, [FromForm] User newDetails)
+        {
+
+            var currentUserDetails = _dbContext.Users.Find(id);
+
+            if (currentUserDetails == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                var uniqueNameForImage = Guid.NewGuid();
+                var filePath = Path.Combine("wwwroot", uniqueNameForImage + ".jpg");
+
+                if (newDetails.Image != null)
+                {
 
                     var fileStream = new FileStream(filePath, FileMode.Create);
                     newDetails.Image.CopyTo(fileStream);
                     currentUserDetails.ImageUrl = filePath.Remove(0, 7);
                 }
 
-                currentUserDetails.Name = newDetails.Name;
-                currentUserDetails.Email = newDetails.Email;
-                currentUserDetails.Phone = newDetails.Phone;
-                currentUserDetails.Image = newDetails.Image;
-                currentUserDetails.ImageUrl = newDetails.ImageUrl;
+                _dbContext.SaveChanges();
 
             }
+            return Ok("Record successfully updated");
 
-
-            return null;
         }
-
-
     }
 }
+
+   
